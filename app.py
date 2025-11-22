@@ -1,59 +1,102 @@
+# app.py — Final Memory Flipbook (Option A)
+# - Memory page with simple slide-style transitions (stable)
+# - Separate letter page (no glitch between Next/Previous/Letter)
+# - Soft pink diary aesthetic (CSS)
+# - Copy -> paste into your project root (memory_flipbook/app.py)
+#
+# Note: You previously uploaded a heart sticker at:
+# /mnt/data/a4e98056-4d96-40c6-bb87-101ca6cb6f2a.png
+# (kept here as reference only; no stickers are used in this version)
+
 import streamlit as st
 from PIL import Image
 import os
 
-# -----------------------------------------------
-# CONFIG
-# -----------------------------------------------
-st.set_page_config(
-    page_title="Our Memory Flipbook 💝",
-    page_icon="💞",
-    layout="wide"
+# ---------------------------
+# Page config
+# ---------------------------
+st.set_page_config(page_title="Our Memory Flipbook 💝", page_icon="💞", layout="wide")
+
+# ---------------------------
+# CSS (soft pink diary look + simple slide)
+# ---------------------------
+st.markdown(
+    """
+    <style>
+    :root {
+      --pink-1: #ffe6f2;
+      --pink-2: #fff6ff;
+      --accent: #d63384;
+    }
+    body {
+      background: linear-gradient(to bottom right, var(--pink-1), var(--pink-2));
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    .page-wrap {
+      max-width: 920px;
+      margin: 18px auto;
+    }
+    .memory-card {
+      background: rgba(255,255,255,0.70);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(255,100,150,0.12);
+      transition: transform 0.45s ease, opacity 0.45s ease;
+      overflow: hidden;
+    }
+    .slide-in-left { transform: translateX(-8px); opacity: 1; }
+    .slide-in-right { transform: translateX(8px); opacity: 1; }
+    .polaroid {
+      padding: 8px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      position: relative;
+    }
+    .title-text {
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .excerpt {
+      font-size: 15px;
+      margin-top: 8px;
+      color: #333;
+    }
+    .meta {
+      color: #666;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .letter-box {
+      background: white;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+    }
+    .nav-button {
+      background: white;
+      border-radius: 8px;
+      padding: 8px 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+      border: none;
+      cursor: pointer;
+    }
+    /* responsive */
+    @media (max-width: 720px) {
+      .title-text { font-size: 22px; }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
-# -----------------------------------------------
-# CUSTOM CSS (cute + Y2K aesthetic)
-# -----------------------------------------------
-st.markdown("""
-    <style>
-        body {
-            background: linear-gradient(to bottom right, #ffe6f2, #fff6ff);
-        }
-        .memory-card {
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(12px);
-            border-radius: 22px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(255, 100, 150, 0.2);
-        }
-        .polaroid {
-            padding: 10px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-        }
-        .title-text {
-            font-size: 28px;
-            font-weight: 600;
-            text-align: center;
-            color: #d63384;
-        }
-        .sparkle {
-            font-size: 22px;
-            margin-left: 6px;
-        }
-        .letter-box {
-            background: white;
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.1);
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# -----------------------------------------------
-# MEMORY DATA (YOU WILL EDIT THIS PART)
-# -----------------------------------------------
+# ---------------------------
+# Your memories (keep as you wrote them)
+# ---------------------------
 memories = [
     {
         "title": "our first concert",
@@ -248,61 +291,122 @@ lastly i just want you to know i will always cheer the loudest for you, stand be
 that may come our way. baby you are enough. and i will love you always and forever.
 """
     },
-
-
 ]
 
-# -----------------------------------------------
-# FLIPBOOK LOGIC
-# -----------------------------------------------
+# ---------------------------
+# Session state (stable nav)
+# ---------------------------
 if "page" not in st.session_state:
     st.session_state.page = 0
+if "view" not in st.session_state:
+    st.session_state.view = "memory"  # or "letter"
+if "direction" not in st.session_state:
+    st.session_state.direction = "none"  # "left" or "right" used for styling briefly
 
 total = len(memories)
 current = memories[st.session_state.page]
 
-# -----------------------------------------------
-# TITLE
-# -----------------------------------------------
+# helper functions
+def go_next():
+    st.session_state.direction = "right"
+    st.session_state.page = (st.session_state.page + 1) % total
+
+def go_prev():
+    st.session_state.direction = "left"
+    st.session_state.page = (st.session_state.page - 1) % total
+
+def open_letter():
+    st.session_state.view = "letter"
+
+def back_to_memory():
+    st.session_state.view = "memory"
+
+# ---------------------------
+# Letter page (separate, stable)
+# ---------------------------
+if st.session_state.view == "letter":
+    st.markdown("<div class='page-wrap'>", unsafe_allow_html=True)
+    st.markdown(f"<div class='memory-card'>", unsafe_allow_html=True)
+    st.markdown(f"<h2 class='title-text'>{current['title']}  💌</h2>", unsafe_allow_html=True)
+    st.write(f"**{current['date']}**")
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div class='letter-box'>", unsafe_allow_html=True)
+    st.write(current["letter"])
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # navigation row
+    col1, col2, col3, col4 = st.columns([1,1,1,1])
+    with col1:
+        if st.button("⬅ Back to Memory"):
+            back_to_memory()
+    with col2:
+        if st.button("⬅ Previous Letter"):
+            go_prev()
+            # stay on letter view after changing page
+            st.session_state.view = "letter"
+    with col3:
+        if st.button("Next Letter ➡"):
+            go_next()
+            st.session_state.view = "letter"
+    with col4:
+        if st.button("🏠 Home"):
+            back_to_memory()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.stop()
+
+# ---------------------------
+# Memory page (main)
+# ---------------------------
+st.markdown("<div class='page-wrap'>", unsafe_allow_html=True)
+
+# Title
 st.markdown(f"<h1 class='title-text'>Our Memory Flipbook ✨</h1>", unsafe_allow_html=True)
 st.write("")
 
-# -----------------------------------------------
-# LAYOUT
-# -----------------------------------------------
-col1, col2, col3 = st.columns([1, 2, 1])
+# Card with optional simple slide class
+slide_class = ""
+if st.session_state.direction == "left":
+    slide_class = "slide-in-left"
+elif st.session_state.direction == "right":
+    slide_class = "slide-in-right"
 
-with col2:
-    st.markdown("<div class='memory-card'>", unsafe_allow_html=True)
+st.markdown(f"<div class='memory-card {slide_class}'>", unsafe_allow_html=True)
 
-    # Polaroid Image
-    if os.path.exists(current["image"]):
+# Image
+if os.path.exists(current["image"]):
+    try:
         img = Image.open(current["image"])
+        # show image
         st.markdown("<div class='polaroid'>", unsafe_allow_html=True)
         st.image(img, use_column_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
+    except Exception as e:
+        st.write("Image couldn't be opened:", e)
+else:
+    st.write("Image not found:", current["image"])
 
-    st.write(f"### {current['title']}  ✨")
-    st.write(f"**{current['date']}**")
-    st.write(current["excerpt"])
+# Title / meta / excerpt
+st.markdown(f"### {current['title']}  ✨", unsafe_allow_html=True)
+st.markdown(f"**{current['date']}**", unsafe_allow_html=True)
+st.markdown(f"<div class='excerpt'>{current['excerpt']}</div>", unsafe_allow_html=True)
 
-    # Open full letter
-    if st.button("Read my full letter 💌"):
-        st.markdown("<div class='letter-box'>", unsafe_allow_html=True)
-        st.write(current["letter"])
-        st.markdown("</div>", unsafe_allow_html=True)
+# Read letter button (opens separate page)
+if st.button("Read my full letter 💌"):
+    open_letter()
 
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------------------
-# NAVIGATION BUTTONS
-# -----------------------------------------------
-left, mid, right = st.columns([1, 1, 1])
-
-with left:
+# Navigation buttons
+col_l, col_mid, col_r = st.columns([1,1,1])
+with col_l:
     if st.button("⬅ Previous"):
-        st.session_state.page = (st.session_state.page - 1) % total
-
-with right:
+        go_prev()
+with col_r:
     if st.button("Next ➡"):
-        st.session_state.page = (st.session_state.page + 1) % total
+        go_next()
+
+# small helper: reset direction so animation doesn't persist forever
+# (this keeps styling simple; it's safe to leave as-is)
+st.session_state.direction = "none"
