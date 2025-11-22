@@ -401,7 +401,9 @@ if st.button("Read my full letter 💌"):
 st.markdown("</div>", unsafe_allow_html=True)
 
 # Navigation buttons
-ccol_l, col_mid, col_r = st.columns([1,1,1])
+# --- Navigation buttons (fixed, stable) ---
+col_l, col_mid, col_r = st.columns([1, 1, 1])
+
 with col_l:
     if st.button("⬅ Previous"):
         st.session_state.direction = "left"
@@ -415,6 +417,7 @@ with col_r:
         st.session_state.page = (st.session_state.page + 1) % total
         st.session_state.view = "memory"
         st.experimental_rerun()
+
 
 
 # small helper: reset direction so animation doesn't persist forever
