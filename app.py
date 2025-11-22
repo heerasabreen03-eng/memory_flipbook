@@ -395,7 +395,7 @@ st.markdown(f"<div class='excerpt'>{current['excerpt']}</div>", unsafe_allow_htm
 # Read letter button (opens separate page)
 if st.button("Read my full letter 💌"):
     st.session_state.view = "letter"
-    st.experimental_rerun()
+    st.rerun()
 
 
 st.markdown("</div>", unsafe_allow_html=True)
@@ -409,14 +409,14 @@ with col_l:
         st.session_state.direction = "left"
         st.session_state.page = (st.session_state.page - 1) % total
         st.session_state.view = "memory"
-        st.experimental_rerun()
+        st.rerun()
 
 with col_r:
     if st.button("Next ➡"):
         st.session_state.direction = "right"
         st.session_state.page = (st.session_state.page + 1) % total
         st.session_state.view = "memory"
-        st.experimental_rerun()
+        st.rerun()
 
 
 
