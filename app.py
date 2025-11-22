@@ -394,18 +394,28 @@ st.markdown(f"<div class='excerpt'>{current['excerpt']}</div>", unsafe_allow_htm
 
 # Read letter button (opens separate page)
 if st.button("Read my full letter 💌"):
-    open_letter()
+    st.session_state.view = "letter"
+    st.experimental_rerun()
+
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # Navigation buttons
-col_l, col_mid, col_r = st.columns([1,1,1])
+ccol_l, col_mid, col_r = st.columns([1,1,1])
 with col_l:
     if st.button("⬅ Previous"):
-        go_prev()
+        st.session_state.direction = "left"
+        st.session_state.page = (st.session_state.page - 1) % total
+        st.session_state.view = "memory"
+        st.experimental_rerun()
+
 with col_r:
     if st.button("Next ➡"):
-        go_next()
+        st.session_state.direction = "right"
+        st.session_state.page = (st.session_state.page + 1) % total
+        st.session_state.view = "memory"
+        st.experimental_rerun()
+
 
 # small helper: reset direction so animation doesn't persist forever
 # (this keeps styling simple; it's safe to leave as-is)
