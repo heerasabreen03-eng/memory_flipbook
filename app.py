@@ -13,6 +13,39 @@ from PIL import Image
 import os
 
 # ---------------------------
+# PASSWORD GATE (Cute & Romantic)
+# ---------------------------
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+PASSWORD = "aloo"  # <-- set your password here
+HINT = "hint: what I call you the most 💗"  # <-- customize if you want
+
+if not st.session_state.authenticated:
+    st.markdown("""
+        <h1 style='text-align:center; color:#d63384;'>
+            🔐 Enter Password 💞
+        </h1>
+        <p style='text-align:center; color:#444; font-size:16px;'>
+            this flipbook is only for you, my love 🧁
+        </p>
+    """, unsafe_allow_html=True)
+
+    pwd = st.text_input("Password:", type="password", placeholder="enter the password...")
+
+    st.write(f"🔍 *{HINT}*")
+
+    if st.button("Unlock 💗"):
+        if pwd == PASSWORD:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Wrong password gundu 😤 try again 💗")
+
+    st.stop()
+
+# ---------------------------
 # Page config
 # ---------------------------
 st.set_page_config(page_title="Our Memory Flipbook 💝", page_icon="💞", layout="wide")
